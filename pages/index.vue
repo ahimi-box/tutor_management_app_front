@@ -73,11 +73,37 @@
         </v-card-actions>
       </v-card>
     </v-col>
+    <div>
+      <button
+        type="button"
+        name="button"
+        @click="getMsg"
+      >
+        RailsからAPIを取得する
+      </button>
+      <div
+        v-for="(msg, i) in msgs"
+        :key="i"
+      >
+        {{ msg }}
+      </div>
+    </div>
   </v-row>
 </template>
 
 <script>
 export default {
-  name: 'IndexPage'
+  name: 'IndexPage',
+  data () {
+    return {
+      msgs: []
+    }
+  },
+  methods: {
+    getMsg () {
+      this.$axios.$get('/api/v1/hello')
+        .then(res => this.msgs.push(res))
+    }
+  }
 }
 </script>
