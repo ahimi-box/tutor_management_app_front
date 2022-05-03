@@ -1,6 +1,11 @@
 import colors from 'vuetify/es5/util/colors'
 
 export default {
+  watchers: {
+    webpack: {
+      poll: true
+    }
+  },
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
 
@@ -44,7 +49,8 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/auth' //追加
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -57,7 +63,8 @@ export default {
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
     theme: {
-      dark: true,
+      dark: false,
+      // dark: true,
       themes: {
         dark: {
           primary: colors.blue.darken2,
@@ -74,5 +81,28 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+  },
+  // 追加
+  auth: {
+    strategies: {
+      student: {
+        _scheme: 'local',
+        endpoints: {
+          login: { url: '/api/v1/auth/sign_in', method: 'post', propertyName: 'token' },
+          // logout: { url: '/api/v1/auth/sign_out', method: 'post' },
+          // user: { url: '/api/v1/auth/user', method: 'get', propertyName: 'user' }
+          user: false
+        },
+      },
+      teacher: {
+        _scheme: 'local',
+        endpoints: {
+          login: { url: '/api/v1/teacher_auth/sign_in', method: 'post', propertyName: 'token' },
+          // logout: { url: '/api/v1/teacher_auth/sign_out', method: 'post' },
+          // user: { url: '/api/v1/teacher_auth/user', method: 'get', propertyName: 'user' }
+          user: false
+        }
+      }
+    }
   }
 }

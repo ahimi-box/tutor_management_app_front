@@ -1,5 +1,5 @@
 <template>
-  <v-app dark>
+  <v-app>
     <v-navigation-drawer
       v-model="drawer"
       :mini-variant="miniVariant"
@@ -15,9 +15,9 @@
           router
           exact
         >
-          <v-list-item-action>
+          <!-- <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
+          </v-list-item-action> -->
           <v-list-item-content>
             <v-list-item-title v-text="item.title" />
           </v-list-item-content>
@@ -30,7 +30,18 @@
       app
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-btn
+      <v-toolbar-title v-text="title" />
+      <v-spacer />
+      <span v-if="$auth.loggedIn">
+        <v-btn
+          color="error"
+          dark
+          @click="logout"
+        >
+          ログアウト
+        </v-btn>
+      </span>
+      <!-- <v-btn
         icon
         @click.stop="miniVariant = !miniVariant"
       >
@@ -55,10 +66,11 @@
         @click.stop="rightDrawer = !rightDrawer"
       >
         <v-icon>mdi-menu</v-icon>
-      </v-btn>
+      </v-btn> -->
     </v-app-bar>
     <v-main>
       <v-container>
+        <FlashMessage />
         <Nuxt />
       </v-container>
     </v-main>
@@ -89,6 +101,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 export default {
   name: 'DefaultLayout',
   data () {
@@ -96,22 +109,86 @@ export default {
       clipped: false,
       drawer: false,
       fixed: false,
+      // items: [
+      //   {
+      //     icon: 'mdi-apps',
+      //     title: 'Welcome',
+      //     to: '/'
+      //   },
+      //   {
+      //     icon: 'mdi-chart-bubble',
+      //     title: 'Inspire',
+      //     to: '/inspire'
+      //   }
+      // ],
       items: [
         {
-          icon: 'mdi-apps',
-          title: 'Welcome',
-          to: '/'
+          title: '生徒ログイン',
+          to: '/login/student_login'
         },
         {
-          icon: 'mdi-chart-bubble',
-          title: 'Inspire',
-          to: '/inspire'
+          title: '先生ログイン',
+          to: '/login/teacher_login'
+        },
+        {
+          title: '新規登録',
+          // to: '/sign_up'
         }
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: 'Vuetify.js'
+      // title: 'Vuetify.js'
+      title: '認証機能！！'
+    }
+  },
+
+  computed: {
+    ...mapGetters({
+      user: 'user_information/getUser'
+    })
+  },
+
+  methods: {
+    logout () {
+      // console.log(this.user)
+      // this.$axios.delete('/api/v1/auth/sign_out', {
+      this.url = this.setUrl()
+      this.$axios.delete(this.url, {
+        headers: {
+          uid: localStorage.getItem('uid'),
+          'access-token': localStorage.getItem('access-token'),
+          client: localStorage.getItem('client')
+        }
+      })
+        .then((res) => {
+          // console.log(this.user)
+          // console.log(localStorage)
+          // console.log(this.$auth)
+          this.$auth.logout()
+          localStorage.removeItem('uid')
+          localStorage.removeItem('access-token')
+          localStorage.removeItem('client')
+          this.$router.push('/')
+          this.$store.dispatch(
+            'flashMessage/showMessage',
+            {
+              message: 'ログアウトしました',
+              type: 'success',
+              status: true
+            },
+            { root: true }
+          )
+          this.$store.commit('user_information/logout')
+        })
+    },
+    setUrl () {
+      console.log(this.user)
+      if (this.user && !this.user.teacher) {
+        return '/api/v1/auth/sign_out'
+      } else if (this.user && this.user.teacher) {
+        return '/api/v1/teacher_auth/sign_out'
+      }
     }
   }
 }
