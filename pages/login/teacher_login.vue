@@ -1,5 +1,12 @@
 <template>
-  <v-main>
+  <LoginForm
+    :title="title"
+    :link-title="link_title"
+    :link="link"
+    :login-url="login_url"
+    :login-user="login_user"
+  />
+  <!-- <v-main>
     <v-container>
       <v-row justify="center" align-content="center" class="text-caption">
         <v-col cols="8">
@@ -49,63 +56,80 @@
         </v-col>
       </v-row>
     </v-container>
-  </v-main>
+  </v-main> -->
 </template>
 
 <script>
+import LoginForm from '~/components/LoginForm.vue'
+
 export default {
+  auth: false,
+  components: {
+    LoginForm
+  },
   data () {
     return {
-      message: '新規登録です',
-      showPassword: false,
-      email: '',
-      password: '',
-      errors: null,
-      user: {}
-    }
-  },
-  methods: {
-    // loginメソッドの呼び出し
-    async loginWithAuthModule () {
-      await this.$auth
-        .loginWith('teacher', {
-          // emailとpasswordの情報を送信
-          data: {
-            email: this.email,
-            password: this.password
-          }
-        })
-        .then(
-          (response) => {
-          // 認証に必要な情報をlocalStorageに保存
-            localStorage.setItem('access-token', response.headers['access-token'])
-            localStorage.setItem('client', response.headers.client)
-            localStorage.setItem('uid', response.headers.uid)
-            localStorage.setItem('token-type', response.headers['token-type'])
-            this.$router.push('/')
-            this.$store.dispatch(
-              'flashMessage/showMessage',
-              {
-                message: 'ログインしました.',
-                type: 'success',
-                status: true
-              },
-              { root: true }
-            )
-            this.user = response.data.data
-            this.$store.dispatch('user_information/setUser', this.user)
-            return response
-          }
-        )
-        .catch((e) => {
-          this.errors = e.response.data.errors
-        })
-    },
-    authenticate () {
-      this.$auth.loginWith('app')
+      title: '先生ログイン',
+      link_title: '生徒はこちら',
+      link: '/login/student_login',
+      login_url: '/api/v1/teacher_auth/sign_in',
+      login_user: 'teacher'
     }
   }
 }
+// export default {
+//   data () {
+//     return {
+//       message: '新規登録です',
+//       showPassword: false,
+//       email: '',
+//       password: '',
+//       errors: null,
+//       user: {}
+//     }
+//   },
+//   methods: {
+//     // loginメソッドの呼び出し
+//     async loginWithAuthModule () {
+//       await this.$auth
+//         .loginWith('teacher', {
+//           // emailとpasswordの情報を送信
+//           data: {
+//             email: this.email,
+//             password: this.password
+//           }
+//         })
+//         .then(
+//           (response) => {
+//           // 認証に必要な情報をlocalStorageに保存
+//             localStorage.setItem('access-token', response.headers['access-token'])
+//             localStorage.setItem('client', response.headers.client)
+//             localStorage.setItem('uid', response.headers.uid)
+//             localStorage.setItem('token-type', response.headers['token-type'])
+//             this.$router.push('/')
+//             this.$store.dispatch(
+//               'flashMessage/showMessage',
+//               {
+//                 message: 'ログインしました.',
+//                 type: 'success',
+//                 status: true
+//               },
+//               { root: true }
+//             )
+//             this.user = response.data.data
+//             this.$store.dispatch('user_information/setUser', this.user)
+//             return response
+//           }
+//         )
+//         .catch((e) => {
+//           this.errors = e.response.data.errors
+//         })
+//     },
+//     authenticate () {
+//       this.$auth.loginWith('app')
+//     }
+//   }
+// }
 </script>
 
 <style scoped>
