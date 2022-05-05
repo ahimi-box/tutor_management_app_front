@@ -6,18 +6,20 @@
       :clipped="clipped"
       fixed
       app
+      color="info"
     >
       <v-list>
         <v-list-item
-          v-for="(item, i) in items"
+          v-for="(item, i) in setItems()"
           :key="i"
           :to="item.to"
           router
           exact
+          @click="itemActionClick(item.action)"
         >
-          <!-- <v-list-item-action>
+          <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action> -->
+          </v-list-item-action>
           <v-list-item-content>
             <v-list-item-title v-text="item.title" />
           </v-list-item-content>
@@ -28,9 +30,13 @@
       :clipped-left="clipped"
       fixed
       app
+      color="#1969B2"
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title v-text="title" />
+      <v-toolbar-title
+        @click="$router.push('/')"
+        v-text="title"
+      />
       <v-spacer />
       <span v-if="$auth.loggedIn">
         <v-btn
@@ -41,32 +47,6 @@
           ログアウト
         </v-btn>
       </span>
-      <!-- <v-btn
-        icon
-        @click.stop="miniVariant = !miniVariant"
-      >
-        <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
-      </v-btn>
-      <v-btn
-        icon
-        @click.stop="clipped = !clipped"
-      >
-        <v-icon>mdi-application</v-icon>
-      </v-btn>
-      <v-btn
-        icon
-        @click.stop="fixed = !fixed"
-      >
-        <v-icon>mdi-minus</v-icon>
-      </v-btn>
-      <v-toolbar-title v-text="title" />
-      <v-spacer />
-      <v-btn
-        icon
-        @click.stop="rightDrawer = !rightDrawer"
-      >
-        <v-icon>mdi-menu</v-icon>
-      </v-btn> -->
     </v-app-bar>
     <v-main>
       <v-container>
@@ -94,6 +74,7 @@
     <v-footer
       :absolute="!fixed"
       app
+      color="#1969B2"
     >
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer>
@@ -109,37 +90,69 @@ export default {
       clipped: false,
       drawer: false,
       fixed: false,
-      // items: [
-      //   {
-      //     icon: 'mdi-apps',
-      //     title: 'Welcome',
-      //     to: '/'
-      //   },
-      //   {
-      //     icon: 'mdi-chart-bubble',
-      //     title: 'Inspire',
-      //     to: '/inspire'
-      //   }
-      // ],
-      items: [
+      default_items: [
         {
-          title: '生徒ログイン',
-          to: '/login/student_login'
+          icon: 'mdi-login',
+          title: 'ログイン',
+          to: '/login/student_login',
+          action: false
+        }
+      ],
+      teacher_items: [
+        {
+          icon: 'mdi-account',
+          title: 'マイページ',
+          to: '/teacher/teacher_account',
+          action: false
         },
         {
-          title: '先生ログイン',
-          to: '/login/teacher_login'
+          icon: 'mdi-login',
+          title: 'ログアウト',
+          action: 'logout'
+        }
+      ],
+      student_items: [
+        {
+          icon: 'mdi-account',
+          title: 'マイページ',
+          to: '/student/student_account',
+          action: false
         },
         {
-          title: '新規登録',
-          // to: '/sign_up'
+          icon: 'mdi-login',
+          title: 'ログアウト',
+          action: 'logout'
+        }
+      ],
+      admin_items: [
+        {
+          icon: 'mdi-account-details',
+          title: '先生一覧',
+          to: '/admin/teacher_index',
+          action: false
+        },
+        {
+          icon: 'mdi-account-details',
+          title: '生徒一覧',
+          to: '/admin/student_index',
+          action: false
+        },
+        {
+          icon: 'mdi-clipboard-text-outline',
+          title: 'お知らせ',
+          to: '/admin/notice_index',
+          action: false
+        },
+        {
+          icon: 'mdi-login',
+          title: 'ログアウト',
+          action: 'logout'
         }
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      // title: 'Vuetify.js'
-      title: '認証機能！！'
+      title: 'Tutor_Management_App'
     }
   },
 
@@ -162,9 +175,6 @@ export default {
         }
       })
         .then((res) => {
-          // console.log(this.user)
-          // console.log(localStorage)
-          // console.log(this.$auth)
           this.$auth.logout()
           localStorage.removeItem('uid')
           localStorage.removeItem('access-token')
@@ -183,11 +193,28 @@ export default {
         })
     },
     setUrl () {
-      console.log(this.user)
+      // console.log(this.user)
       if (this.user && !this.user.teacher) {
         return '/api/v1/auth/sign_out'
       } else if (this.user && this.user.teacher) {
         return '/api/v1/teacher_auth/sign_out'
+      }
+    },
+    setItems () {
+      if (!this.$auth.loggedIn) {
+        // console.log(this.user)
+        return this.default_items
+      } else if (this.user && !this.user.admin && !this.user.teacher) {
+        return this.student_items
+      } else if (this.user && !this.user.admin && this.user.teacher) {
+        return this.teacher_items
+      } else if (this.user && this.user.admin) {
+        return this.admin_items
+      }
+    },
+    itemActionClick (action) {
+      if (action === 'logout') {
+        this.logout()
       }
     }
   }

@@ -76,14 +76,6 @@ export default {
 
   data () {
     return {
-      // auth: false,
-      // showPassword: false,
-      // user: {},
-      // errors: null,
-      // login_info: {
-      //   email: '',
-      //   password: ''
-      // }
       showPassword: false,
       email: '',
       password: '',
@@ -91,39 +83,9 @@ export default {
       user: {}
     }
   },
+
   methods: {
     async login () {
-    //   await this.$axios.post(this.loginUrl, this.login_info)
-    //     .then(
-    //       (response) => {
-    //         console.log(response)
-    //         localStorage.setItem('access-token', response.headers['access-token'])
-    //         localStorage.setItem('client', response.headers.client)
-    //         localStorage.setItem('uid', response.headers.uid)
-    //         localStorage.setItem('token-type', response.headers['token-type'])
-    //         this.user = response.data.data
-    //         this.$store.dispatch('user_information/setUser', this.user)
-    //         this.$router.push(this.setRouter())
-    //         this.$store.dispatch(
-    //           'flashMessage/showMessage',
-    //           {
-    //             message: 'ログインしました.',
-    //             type: 'success',
-    //             status: true
-    //           },
-    //           { root: true }
-    //         )
-    //         return response
-    //       }
-    //     )
-    //     .catch((e) => {
-    //       console.log(1)
-    //       this.errors = e.response.data.errors
-    //     })
-    // },
-    // authenticate () {
-    //   this.$auth.loginWith('app')
-    // },
       await this.$auth
         // .loginWith('student', {
         .loginWith(this.loginUser, {
@@ -140,6 +102,9 @@ export default {
             localStorage.setItem('client', response.headers.client)
             localStorage.setItem('uid', response.headers.uid)
             localStorage.setItem('token-type', response.headers['token-type'])
+            this.user = response.data.data
+            // console.log(this.user)
+            this.$store.dispatch('user_information/setUser', this.user)
             // this.$router.push('/')
             this.$router.push(this.setRouter())
             this.$store.dispatch(
@@ -151,8 +116,6 @@ export default {
               },
               { root: true }
             )
-            this.user = response.data.data
-            this.$store.dispatch('user_information/setUser', this.user)
             return response
           }
         )
@@ -164,29 +127,14 @@ export default {
       this.$auth.loginWith('app')
     },
     setRouter () {
-      // if (!this.user.admin) {
-      //   if (this.loginUrl === '/api/v1/auth/sign_in') {
-      //     // return '/student/student_account'
-      //     return '/'
-      //   } else {
-      //     // return '/teacher/teacher_account'
-      //     return '/'
-      //   }
-      // } else {
-      //   // return '/admin_teacher_index'
-      //   return '/'
-      // }
-      if (this.loginurl === '/api/v1/auth/sign_in') {
-        // return '/student/student_account'
-        return '/'
-      } else if (this.user.teacher) {
-        //  {
-        // return '/teacher/teacher_account'
-        return '/'
+      if (!this.user.admin) {
+        if (this.loginUrl === '/api/v1/auth/sign_in') {
+          return '/student/student_account'
+        } else {
+          return '/teacher/teacher_account'
+        }
       } else {
-        // return '/admin_teacher_index'
-        return '/'
-      // }
+        return '/admin/teacher_index'
       }
     }
   }
