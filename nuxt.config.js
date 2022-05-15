@@ -33,6 +33,7 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    { src: '~/plugins/localStorage.js', ssr: false }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -84,6 +85,12 @@ export default {
   },
   // 追加
   auth: {
+    redirect: {
+      login: '/login', //middleware:authを設定したURLにアクセスがあった場合の、リダイレクト先。
+      logout: '/', //ログアウト後のリダイレクト先
+      callback: false,
+      // home: '/' ///ログイン後のリダイレクト先。
+     },
     strategies: {
       student: {
         _scheme: 'local',

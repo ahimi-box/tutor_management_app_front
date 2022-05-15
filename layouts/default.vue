@@ -93,8 +93,14 @@ export default {
       default_items: [
         {
           icon: 'mdi-login',
-          title: 'ログイン',
+          title: '生徒ログイン',
           to: '/login/student_login',
+          action: false
+        },
+        {
+          icon: 'mdi-login',
+          title: '先生ログイン',
+          to: '/login/teacher_login',
           action: false
         }
       ],
@@ -164,8 +170,6 @@ export default {
 
   methods: {
     logout () {
-      // console.log(this.user)
-      // this.$axios.delete('/api/v1/auth/sign_out', {
       this.url = this.setUrl()
       this.$axios.delete(this.url, {
         headers: {
@@ -193,7 +197,6 @@ export default {
         })
     },
     setUrl () {
-      // console.log(this.user)
       if (this.user && !this.user.teacher) {
         return '/api/v1/auth/sign_out'
       } else if (this.user && this.user.teacher) {
@@ -202,7 +205,6 @@ export default {
     },
     setItems () {
       if (!this.$auth.loggedIn) {
-        // console.log(this.user)
         return this.default_items
       } else if (this.user && !this.user.admin && !this.user.teacher) {
         return this.student_items

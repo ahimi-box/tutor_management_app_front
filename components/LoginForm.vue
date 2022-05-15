@@ -38,8 +38,10 @@
                   {{ linkTitle }}
                 </router-link>
               </v-card-actions>
-              <p>email: sample@email.com</p>
-              <p>email: teacher@email.com</p>
+              <!-- <p>email: sample@email.com</p> -->
+              <p>email: student-#{n+1}@email.com</p>
+              <!-- <p>email: teacher@email.com</p> -->
+              <p>email: teacher-#{n+1}@email.com</p>
               <p>email: teacher-admin@email.com</p>
             </v-card-text>
           </v-card>
@@ -97,13 +99,14 @@ export default {
         })
         .then(
           (response) => {
-          // 認証に必要な情報をlocalStorageに保存
+            console.log(response)
+            // 認証に必要な情報をlocalStorageに保存
             localStorage.setItem('access-token', response.headers['access-token'])
             localStorage.setItem('client', response.headers.client)
             localStorage.setItem('uid', response.headers.uid)
             localStorage.setItem('token-type', response.headers['token-type'])
             this.user = response.data.data
-            // console.log(this.user)
+            console.log(this.user)
             this.$store.dispatch('user_information/setUser', this.user)
             // this.$router.push('/')
             this.$router.push(this.setRouter())
