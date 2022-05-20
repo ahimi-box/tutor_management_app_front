@@ -5,24 +5,22 @@
     </h2>
     <v-data-table
       :headers="headers"
-      :items="desserts"
-      sort-by="calories"
+      :items="students"
+      :search="search"
       class="elevation-1"
     >
+      <template #[`item.name`]="{ item }">
+        <span>
+          {{ item.name }}さん
+        </span>
+      </template>
       <template #top>
         <v-toolbar
           flat
         >
-          <v-toolbar-title>My CRUD</v-toolbar-title>
-          <v-divider
-            class="mx-4"
-            inset
-            vertical
-          />
-          <v-spacer />
           <v-dialog
             v-model="dialog"
-            max-width="500px"
+            max-width="650px"
           >
             <template #activator="{ on, attrs }">
               <v-btn
@@ -32,133 +30,251 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                New Item
+                生徒追加
               </v-btn>
             </template>
             <v-card>
               <v-card-title>
                 <span class="text-h5">{{ formTitle }}</span>
+                <v-spacer />
+                <v-icon
+                  x-large
+                  color="black"
+                  @click="close"
+                >
+                  mdi-close-box-outline
+                </v-icon>
               </v-card-title>
-
-              <v-card-text>
+              <!-- 編集dialog -->
+              <v-card-text v-if="editedIndex > -1">
+                <span>{{ studentItem.name }}さん (生徒)</span>
                 <v-container>
                   <v-row>
                     <v-col
                       cols="12"
-                      sm="6"
-                      md="4"
                     >
                       <v-text-field
-                        v-model="editedItem.name"
-                        label="Dessert name"
+                        v-model="studentItem.name"
+                        prepend-icon="mdi-account-circle"
+                        label="名前"
                       />
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
                       <v-text-field
-                        v-model="editedItem.calories"
-                        label="Calories"
+                        v-model="studentItem.email"
+                        prepend-icon="mdi-email"
+                        label="メールアドレス"
                       />
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
+                      <section>
+                        <p>{{ message }}</p>
+                        <v-col
+                          cols="6"
+                        >
+                          <v-text-field
+                            v-model="studentItem.post_code"
+                            prepend-icon="mdi-home-variant-outline"
+                            label="郵便番号"
+                          >
+                            <template #append-outer>
+                              <v-btn
+                                color="primary"
+                                @click="searchAddressInfo"
+                              >
+                                検索
+                              </v-btn>
+                            </template>
+                          </v-text-field>
+                        </v-col>
+                      </section>
                       <v-text-field
-                        v-model="editedItem.fat"
-                        label="Fat (g)"
+                        v-model="studentItem.address"
+                        label="住所"
                       />
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <v-text-field
-                        v-model="editedItem.carbs"
-                        label="Carbs (g)"
-                      />
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <v-text-field
-                        v-model="editedItem.protein"
-                        label="Protein (g)"
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                      >
+                        <v-dialog
+                          ref="dialog"
+                          v-model="modal"
+                          :return-value.sync="studentItem.birthday"
+                          persistent
+                          width="290px"
+                        >
+                          <template #activator="{ on, attrs }">
+                            <v-text-field
+                              v-model="studentItem.birthday"
+                              label="生年月日"
+                              prepend-icon="mdi-calendar"
+                              readonly
+                              v-bind="attrs"
+                              v-on="on"
+                            />
+                          </template>
+                          <v-date-picker
+                            v-model="studentItem.birthday"
+                            scrollable
+                          >
+                            <v-spacer />
+                            <v-btn
+                              text
+                              color="primary"
+                              @click="modal = false"
+                            >
+                              キャンセル
+                            </v-btn>
+                            <v-btn
+                              text
+                              color="primary"
+                              @click="$refs.dialog.save(studentItem.birthday)"
+                            >
+                              <!-- @click="$refs.dialog.save(date)" -->
+                              OK
+                            </v-btn>
+                          </v-date-picker>
+                        </v-dialog>
+                      </v-col>
+                      <!-- <p>{{ studentItem.teacher_ids }}</p> -->
+                      <!-- <p>{{ studentItem.teachers_students }}</p> -->
+                      <v-select
+                        v-model="studentItem.teacher_ids"
+                        item-text="name"
+                        item-value="id"
+                        :items="teachers"
+                        prepend-icon="mdi-account-circle"
+                        attach
+                        label="担当の先生"
+                        multiple
                       />
                     </v-col>
                   </v-row>
                 </v-container>
               </v-card-text>
+              <!-- 先生追加dialog -->
+              <v-card-text v-else>
+                <Notification v-if="errors" :messages="errors" />
+                <v-form>
+                  <v-text-field
+                    v-model="addItem.name"
+                    prepend-icon="mdi-account-circle"
+                    label="名前"
+                  />
+                  <v-text-field
+                    v-model="addItem.email"
+                    prepend-icon="mdi-email"
+                    label="メールアドレス"
+                  />
+                  <v-text-field
+                    v-model="addItem.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                    prepend-icon="mdi-lock"
+                    label="パスワード"
+                    @click:append="showPassword = !showPassword"
+                  />
+                  <v-text-field
+                    v-model="addItem.password_confirmation"
+                    :type="showPassword ? 'text' : 'password'"
+                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                    prepend-icon="mdi-lock"
+                    label="パスワード再確認"
+                    @click:append="showPassword = !showPassword"
+                  />
+                  <!-- <p>{{ addItem.teacher_ids }}</p> -->
+                  <v-select
+                    v-model="addItem.teacher_ids"
+                    item-text="name"
+                    item-value="id"
+                    :items="teachers"
+                    prepend-icon="mdi-account-circle"
+                    attach
+                    label="担当の先生"
+                    multiple
+                  />
+                </v-form>
+              </v-card-text>
 
               <v-card-actions>
-                <v-spacer />
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="close"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="save"
-                >
-                  Save
-                </v-btn>
+                <v-dialog>
+                  <template #activator="{ on, attrs }">
+                    <v-btn
+                      v-if="editedIndex > -1"
+                      color="primary"
+                      dark
+                      block
+                      class="mb-2"
+                      v-bind="attrs"
+                      @click="save"
+                      v-on="on"
+                    >
+                      編集
+                    </v-btn>
+                    <v-btn
+                      v-else
+                      color="primary"
+                      dark
+                      block
+                      class="mb-2"
+                      v-bind="attrs"
+                      @click="save"
+                      v-on="on"
+                    >
+                      新規登録
+                    </v-btn>
+                  </template>
+                </v-dialog>
               </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="dialogDelete" max-width="300px">
             <v-card>
               <v-card-title class="text-h5">
-                Are you sure you want to delete this item?
+                本当に削除しますか？
               </v-card-title>
               <v-card-actions>
                 <v-spacer />
                 <v-btn color="blue darken-1" text @click="closeDelete">
-                  Cancel
+                  キャンセル
                 </v-btn>
                 <v-btn color="blue darken-1" text @click="deleteItemConfirm">
-                  OK
+                  削除
                 </v-btn>
                 <v-spacer />
               </v-card-actions>
             </v-card>
           </v-dialog>
+          <v-spacer />
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          />
         </v-toolbar>
       </template>
       <template #[`item.actions`]="{ item }">
         <v-icon
           small
           class="mr-2"
+          color="primary"
           @click="editItem(item)"
         >
           mdi-pencil
         </v-icon>
         <v-icon
           small
+          color="error"
           @click="deleteItem(item)"
         >
           mdi-delete
         </v-icon>
       </template>
-      <template #no-data>
-        <v-btn
-          color="primary"
-          @click="initialize"
-        >
-          Reset
-        </v-btn>
-      </template>
     </v-data-table>
+    <!-- <div>
+      <p>{{ addItem.teacher_id }}</p>
+      <p>{{ students }}</p>
+      <p>{{ teachers }}</p>
+    </div> -->
   </v-app>
 </template>
 
@@ -166,42 +282,53 @@
 export default {
   name: 'StudentIndex',
   data: () => ({
+    modal: false,
     dialog: false,
     dialogDelete: false,
+    search: '',
+    showPassword: false,
+    errors: null,
+    addItem: {
+      name: '',
+      email: '',
+      password: '',
+      password_confirmation: '',
+      teacher_ids: []
+    },
     headers: [
       {
-        text: 'Dessert (100g serving)',
+        text: '名前',
         align: 'start',
         sortable: false,
-        value: 'name'
+        value: 'name',
+        width: '90%'
       },
-      { text: 'Calories', value: 'calories' },
-      { text: 'Fat (g)', value: 'fat' },
-      { text: 'Carbs (g)', value: 'carbs' },
-      { text: 'Protein (g)', value: 'protein' },
-      { text: 'Actions', value: 'actions', sortable: false }
+      { text: '編集/削除', value: 'actions', sortable: false }
     ],
-    desserts: [],
+    students: [],
+    teachers: [],
     editedIndex: -1,
-    editedItem: {
+    studentItem: {
       name: '',
-      calories: 0,
-      fat: 0,
-      carbs: 0,
-      protein: 0
+      post_code: '',
+      address: '',
+      birthday: '',
+      teacher_ids: []
     },
     defaultItem: {
       name: '',
-      calories: 0,
-      fat: 0,
-      carbs: 0,
-      protein: 0
-    }
+      post_code: '',
+      address: '',
+      birthday: '',
+      teacher_ids: []
+    },
+    addressData: {},
+    message: ''
   }),
 
   computed: {
     formTitle () {
-      return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+      return this.editedIndex === -1 ? '新規登録(生徒)' : '編集'
     }
   },
 
@@ -214,107 +341,85 @@ export default {
     }
   },
 
-  created () {
-    this.initialize()
+  mounted () {
+    this.fetchContents()
+    this.teacherSelects()
   },
 
   methods: {
-    initialize () {
-      this.desserts = [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7
-        }
-      ]
+    fetchContents () {
+      this.$axios
+        .get('/api/v1/students')
+        .then((response) => {
+          this.students = response.data
+        })
+    },
+    teacherSelects () {
+      this.$axios
+        .get('/api/v1/teachers')
+        .then((response) => {
+          this.teachers = response.data
+        })
     },
 
+    // 郵便番号検索
+    searchAddressInfo () {
+      const axios = require('axios')
+      const url = 'http://zipcloud.ibsnet.co.jp/api/search?zipcode='
+      axios.get(url + this.studentItem.post_code).then((res) => {
+        if (res.data.results == null) {
+          this.message = 'no data'
+        }
+        this.addressData = res.data.results[0]
+        this.studentItem.address = this.addressData.address1 + this.addressData.address2 + this.addressData.address3
+      }).catch((error) => {
+        console.log(error)
+        this.message = 'error'
+      })
+    },
+
+    // pickerInfo () {
+    //   if (this.studentItem.birthday) {
+    //     return this.studentItem.birthday
+    //   } else {
+    //     // this.studentItem.birthday = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
+    //   }
+    // },
+
     editItem (item) {
-      this.editedIndex = this.desserts.indexOf(item)
-      this.editedItem = Object.assign({}, item)
+      this.editedIndex = this.students.indexOf(item)
+      this.studentItem = Object.assign({}, item)
+      this.studentItem.teacher_ids = this.studentItem.teachers_students.map(t => t.teacher_id)
       this.dialog = true
     },
 
     deleteItem (item) {
-      this.editedIndex = this.desserts.indexOf(item)
-      this.editedItem = Object.assign({}, item)
+      this.editedIndex = this.students.indexOf(item)
+      this.studentItem = Object.assign({}, item)
       this.dialogDelete = true
     },
 
     deleteItemConfirm () {
-      this.desserts.splice(this.editedIndex, 1)
-      this.closeDelete()
+      this.students.splice(this.editedIndex, 1)
+      this.$axios.delete(`/api/v1/students/${this.studentItem.id}`)
+        .then((res) => {
+          this.fetchContents()
+          this.$store.dispatch(
+            'flashMessage/showMessage',
+            {
+              message: '生徒情報を削除しました',
+              type: 'error',
+              status: true
+            }
+          )
+          this.closeDelete()
+        })
     },
 
     close () {
       this.dialog = false
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
+        this.studentItem = Object.assign({}, this.defaultItem)
         this.editedIndex = -1
       })
     },
@@ -322,16 +427,60 @@ export default {
     closeDelete () {
       this.dialogDelete = false
       this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
+        this.studentItem = Object.assign({}, this.defaultItem)
         this.editedIndex = -1
       })
     },
 
     save () {
+      // 編集
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem)
+        // this.$axios.put('/api/v1/auth', this.studentItem)
+        this.$axios.patch(`/api/v1/students/${this.studentItem.id}`, this.studentItem)
+          .then((res) => {
+            this.fetchContents()
+            this.$store.dispatch(
+              'flashMessage/showMessage',
+              {
+                message: '生徒情報を更新しました',
+                type: 'info',
+                status: true
+              }
+            )
+          })
       } else {
-        this.desserts.push(this.editedItem)
+        // 新規登録
+        this.$axios.post('/api/v1/auth', this.addItem)
+          .then((response) => {
+            // this.teachers.push(this.addItem)
+            this.addItem.name = ''
+            this.addItem.email = ''
+            this.addItem.password = ''
+            this.addItem.password_confirmation = ''
+            this.addItem.teacher_ids = ''
+            this.errors = ''
+            this.fetchContents()
+            this.$store.dispatch(
+              'flashMessage/showMessage',
+              {
+                message: '新規登録しました',
+                type: 'success',
+                status: true
+              },
+              { root: true }
+            )
+          })
+          .catch((e) => {
+            this.errors = e.response.data.errors.full_messages
+            this.$store.dispatch(
+              'flashMessage/showMessage',
+              {
+                message: '生徒追加できませんでした。',
+                type: 'error',
+                status: true
+              }
+            )
+          })
       }
       this.close()
     }

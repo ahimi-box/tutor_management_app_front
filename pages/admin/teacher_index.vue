@@ -49,11 +49,6 @@
               <v-card-text v-if="editedIndex > -1">
                 <v-container>
                   <v-row>
-                    <!-- <v-col
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    > -->
                     <v-col
                       cols="6"
                     >
@@ -76,11 +71,6 @@
                         @change="uploadFile()"
                       />
                     </v-col>
-                    <!-- <v-col
-                      cols="6"
-                      sm="6"
-                      md="4"
-                    > -->
                     <v-col
                       cols="6"
                     >
@@ -88,33 +78,14 @@
                         v-model="teacherItem.name"
                         label="名前"
                       />
-                      <!-- </v-col>
-                      <v-col
-                        cols="6"
-                        sm="6"
-                        md="4"
-                      > -->
                       <v-text-field
                         v-model="teacherItem.email"
                         label="メールアドレス"
                       />
-                      <!-- </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                      > -->
-                      <!-- <div
-                        v-for="(subject, i) in editedItem.subjects"
-                        :key="`subject-${i}`"
-                      >
-                        <p>{{ subject.subject }}</p>
-                      </div> -->
                       <v-select
                         v-model="teacherItem.subjects"
                         :items="items"
                         attach
-                        chips
                         label="担当教科"
                         multiple
                       />
@@ -193,20 +164,6 @@
                     </v-btn>
                   </template>
                 </v-dialog>
-                <!-- <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="close"
-                >
-                  キャンセル
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="save"
-                >
-                  新規登録
-                </v-btn> -->
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -254,14 +211,6 @@
           mdi-delete
         </v-icon>
       </template>
-      <!-- <template #no-data>
-        <v-btn
-          color="primary"
-          @click="initialize"
-        >
-          Reset
-        </v-btn>
-      </template> -->
     </v-data-table>
     <!-- <div>
       <p>{{ teachers }}</p>
